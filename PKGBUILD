@@ -6,7 +6,7 @@ pkgdesc="Ultra-polyglot CachyOS rank utility with real-time IPC telemetry pipeli
 arch=('x86_64')
 license=('MIT')
 depends=('fastfetch' 'bash' 'python')
-makedepends=('gcc' 'make' 'cmake' 'go' 'rust')
+makedepends=('gcc' 'make' 'cmake' 'go' 'rust' 'git')
 source=('rank-source.hc'
         'collector.go'
         'probe.c'
@@ -36,7 +36,7 @@ build() {
     cd "$srcdir"
     
     echo "Compiling Rust orchestrator frontend..."
-    rustc main.rs -o rank-cli
+    rustc main.rs -C linker=gcc -o rank-cli
 
     echo "Compiling Go telemetry module..."
     go build -o collector collector.go
@@ -44,18 +44,21 @@ build() {
     echo "Compiling raw C probe with IPC support..."
     gcc probe.c -o rank-probe
 
-    if ! command -v hcc &> /dev/null; then
-        echo "Building hcc locally from source archive..."
-        # If needed for HolyC execution
-    fi
-
-    # hcc rank-source.hc -o rank-core
+    echo "Building hcc compiler from source..."
+    git clone https://github.com/Shrine-Microkernel/hcc.git hcc-src || true
+    make -C hcc-src
+    
+    echo "Compiling HolyC backend core directly with built hcc..."
+    ./hcc-src/hcc rank-source.hc -o rank-core
 }
 
 package() {
     install -Dm755 "$srcdir/rank-cli" "$pkgdir/usr/bin/rank"
     install -Dm755 "$srcdir/collector" "$pkgdir/usr/bin/rank-collector"
     install -Dm755 "$srcdir/rank-probe" "$pkgdir/usr/bin/rank-probe"
+    install -Dm755 "$srcdir/rank-core" "$pkgdir/usr/bin/rank-core"
+    install -Dm755 "$srcdir/hcc-src/hcc" "$pkgdir/usr/bin/hcc"
+
     install -Dm755 "$srcdir/check-rank.sh" "$pkgdir/usr/share/cachyos-rank/check-rank.sh"
     install -Dm644 "$srcdir/cachyos-rank-heal.service" "$pkgdir/usr/lib/systemd/user/cachyos-rank-heal.service"
 }
