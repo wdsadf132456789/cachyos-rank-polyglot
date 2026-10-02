@@ -1,0 +1,4 @@
+type = process
+command = /usr/share/cachyos-rank/check-rank.sh
+options = standard-out, standard-error
+restart = no

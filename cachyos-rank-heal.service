@@ -1,0 +1,11 @@
+[Unit]
+Description=CachyOS Rank Self-Healing Fastfetch Patcher
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/share/cachyos-rank/check-rank.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/share/cachyos-rank/check-rank.sh 2>&1
